@@ -13,23 +13,33 @@ import {
 } from "@mui/material";
 import ImageIcon from "@mui/icons-material/Image";
 import { friends } from "./data";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useState, useEffect } from "react";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import FriendAdd from "./component/FriendAdd";
+import axios from "axios";
+
+type FriendType = {
+  id: number;
+  name: string;
+  statusMessage: string;
+};
 
 const Friends = (): JSX.Element => {
-  const [friendList, setFriendList] = useState(friends);
+  const [friendList, setFriendList] = useState<FriendType[]>([]);
   const [open, setOpen] = useState(false);
+  const [ogFriends, setOgFriends] = useState<FriendType[]>([]);
 
   const changeList = (event: ChangeEvent<HTMLInputElement>) => {
     const target = event.currentTarget.value;
     if (target.length === 0) {
-      setFriendList(friends);
+      setFriendList(ogFriends);
     }
     //name이 있을때만 담아줌
     //friends에다가 filter를 돌려야댐 이유는 friends가 원본이라 손상이 안됨
     else {
-      const newList = friends.filter((name) => name.name.includes(target));
+      const newList = ogFriends.filter((friend) => {
+        friend.name.includes(target);
+      });
       setFriendList(newList);
     }
   };
@@ -41,6 +51,18 @@ const Friends = (): JSX.Element => {
   const closeModal = () => {
     setOpen(false);
   };
+
+  const getFriendList = async () => {
+    const { data } = await axios.get<FriendType[]>(
+      "http://localhost:5000/friends/1"
+    );
+    setOgFriends(data);
+    setFriendList(data);
+  };
+
+  useEffect(() => {
+    getFriendList();
+  }, []);
 
   return (
     <Container>
@@ -60,7 +82,7 @@ const Friends = (): JSX.Element => {
           </Grid>
           <Grid item xs={1.5}>
             <Box sx={{ p: 2 }}>
-              <IconButton color="primary" size="large" onClick={openModal}>
+              <IconButton size="large" onClick={openModal}>
                 {<PersonAddIcon />}
               </IconButton>
             </Box>
